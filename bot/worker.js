@@ -5,9 +5,11 @@ export default {
    if(request.method !== 'POST' || !env.WEBHOOK_SECRET || !env.BOT_TOKEN) return new Response('Forbidden',{status:403});
    const form=await request.formData();
    if(form.get('secret') !== env.WEBHOOK_SECRET) return new Response('Forbidden',{status:403});
+   if(!/^[A-Za-z0-9_-]{1,256}$/.test(env.WEBHOOK_SECRET)) return new Response('Invalid WEBHOOK_SECRET: use only letters, digits, underscore or hyphen',{status:400});
+   if(!/^\d+:[A-Za-z0-9_-]+$/.test(env.BOT_TOKEN)) return new Response('Invalid BOT_TOKEN format: check BotFather token and remove spaces',{status:400});
    const res=await fetch('https://api.telegram.org/bot'+env.BOT_TOKEN+'/setWebhook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:new URL(request.url).origin+'/',secret_token:env.WEBHOOK_SECRET,allowed_updates:['message']})});
    const result=await res.json();
-   return new Response(result.ok?'Webhook connected!':'Webhook setup failed',{status:result.ok?200:502});
+   return new Response(result.ok?'Webhook connected!':'Webhook setup failed: Telegram HTTP '+res.status+' / '+(result.error_code||'unknown')+' — '+(String(result.description||'').replaceAll(env.BOT_TOKEN,'[redacted]').replaceAll(env.WEBHOOK_SECRET,'[redacted]')),{status:result.ok?200:502});
   }
   if(new URL(request.url).pathname === '/connect' && request.method === 'GET') return new Response('<!doctype html><html lang="ru"><meta name="viewport" content="width=device-width,initial-scale=1"><meta charset="utf-8"><title>Подключение бота</title><body style="font:18px system-ui;padding:24px;background:#fff8f3"><h2>Мой прикорм</h2><form method="post" action="/setup"><label>WEBHOOK_SECRET<br><input type="password" name="secret" required autocomplete="off" style="font-size:18px;width:95%;padding:10px"></label><p><button style="padding:12px;font-size:18px">Подключить Telegram</button></p></form></body></html>',{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
   if(request.method !== 'POST') return new Response('Мой прикорм — бот работает!');
