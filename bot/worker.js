@@ -1,7 +1,7 @@
 // Cloudflare Worker. Set BOT_TOKEN and WEBHOOK_SECRET as secrets.
 export default {
  async fetch(request, env) {
-  if(request.method !== 'POST') return new Response('OK');
+  if(request.method !== 'POST') return new Response('Мой прикорм — бот работает!');
   if(!env.BOT_TOKEN || !env.WEBHOOK_SECRET || request.headers.get('X-Telegram-Bot-Api-Secret-Token') !== env.WEBHOOK_SECRET) return new Response('Forbidden',{status:403});
   const update=await request.json();
   const msg=update.message;
